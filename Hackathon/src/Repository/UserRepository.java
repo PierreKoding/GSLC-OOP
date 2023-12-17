@@ -208,7 +208,7 @@ public class UserRepository implements Repository {
         return;
     }
 
-    public User findOne(String col, String[] condition, Boolean join, String tableJoin, Connection conn) {
+    public User findOne(String col, String[] condition, boolean join, String tableJoin, Connection conn) {
 		if(validate(col, condition, join, tableJoin, conn).equals(false)){
 			System.out.println("Error: Wrong Condition");
 			return null;

@@ -143,7 +143,7 @@ public class TeamRepository implements Repository {
 	}
 
 
-	public Team findOne(String col, String[] condition, Boolean join, String tableJoin, Connection conn) {
+	public Team findOne(String col, String[] condition, boolean join, String tableJoin, Connection conn) {
 
 	    this.getDataTeam(conn);
 	    ArrayList<Team> teamAnswer = filterTeam(col, condition);
