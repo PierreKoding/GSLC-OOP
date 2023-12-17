@@ -1,184 +1,83 @@
 package Repository;
 
-import java.util.ArrayList;
-
+import Models.Models;
 import Models.Team;
-import Models.User;
 import Utama.Connection;
 
+import java.util.ArrayList;
+
 public class TeamRepository implements Repository {
-	
-	public ArrayList<Team> teamList = new ArrayList<Team>();
-	public ArrayList<ArrayList<User>> teamMember = new ArrayList<ArrayList<User>>();
 
-	public void stringToObject(ArrayList<String> dataTeam) {
-		ArrayList<Team> result = new ArrayList<Team>();
-		
-		for (String team : dataTeam) {
-			String[] splitData = team.split(",");
-			result.add(new Team(Integer.parseInt(splitData[0]), splitData[1]));
-//			System.out.println(splitData[0]+ splitData[1]);
-		}
-		
-		this.teamList = result;
-		return;
-	}
-	
-	// dapetin list of team
-	public void getDataTeam(Connection conn) {
-		ArrayList<String> teamCSV = new ArrayList<String>();
-		teamCSV = conn.ReadFile("Team");
-		stringToObject(teamCSV);
-	}
-	
-	// cari sign
-	public int getSign(String[] condition){
-		if(condition[0].equals("=")) return 1;
-		return 0;
-	}
-	 
-	public ArrayList<Team> filterTeam(String col, String[] condition){
-		ArrayList<Team> answer = new ArrayList<Team>();
-		
-		for (Team team : this.teamList) {
-			int sign = getSign(condition);
-			String requiredValue = condition[1];
-			if(col.equals("name")){
-				if(sign == 1 && !team.NamaTeam.equals(requiredValue)) continue;
-				if(sign == 0 && team.NamaTeam.equals(requiredValue)) continue;
-				answer.add(team);
-			}
-			else if(col.equals("id")){
-				if(sign == 1 && team.TeamID != Integer.parseInt(requiredValue)) continue;
-				if(sign == 0 && team.TeamID == Integer.parseInt(requiredValue)) continue;
-				answer.add(team);
-			}
-		}
-		
-		return answer;
-	}
-	
-	public void Fill_TeamMember(Connection conn) {
-		UserRepository user = new UserRepository();
-		user.getDataUser(conn);
-		
-		ArrayList<User> userList = user.userList;
+	@Override
+	public ArrayList<Models> find(String column, String[] condition, Boolean join, String joinTable, Connection connection) {
+		ArrayList<Models> result = new ArrayList<>();
 
-		while (teamMember.size() <= teamList.size()) {
-			teamMember.add(new ArrayList<User>());
-		}
+	    ArrayList<String> teamData = connection.ReadFile("Team");
 
-		for (User users : userList) {
-			User userNow = new User(null,null,null);
-			userNow = users;
-			int idTeam = userNow.TeamID;
-			this.teamMember.get(idTeam).add(userNow);
-		}
-		
+	    for (String line : teamData) {
+	        String[] fields = line.split(",");
+
+	        if (condition == null || (fields.length > 0 && fields[0].equals(condition[1]))) {
+	            Team team = new Team(Integer.parseInt(fields[0]), fields[1]);
+	            result.add(team);
+	        }
+	    }
+
+	    return result.isEmpty() ? null : result;
 	}
 
-	public Boolean validate(String col, String[] condition, Boolean join, String tableJoin, Connection conn) {
+	@Override
+	public Models findOne(String col, String[] condition, boolean join, String table, Connection conn) {
 	    if (col == null && condition != null) {
-	        return false;
+	        System.err.println("Error: Column is null, but conditions are specified.");
+	        return null;
 	    }
 
-	    if (col != null && condition == null) {
-	        return false;
+	    if (condition == null && col != null) {
+	        System.err.println("Error: Conditions are null, but column is specified.");
+	        return null;
 	    }
 
-	    if (col != null && !(col.equals("id") || col.equals("name"))) {
-	        return false;
+	    if (table == null && join) {
+	        System.err.println("Error: Join table is null, but join condition is true.");
+	        return null;
 	    }
 
-	    if (condition != null) {
-	        if (condition.length != 2 || condition[0] == null || condition[1] == null) {
-	            return false;
-	        }
-
-	        if (!(condition[0].equals("=") || condition[0].equals("!="))) {
-	            return false;
-	        }
+	    if (table != null && !join) {
+	        System.err.println("Error: Join condition is false, but join table is specified.");
+	        return null;
 	    }
 
-	    if (!join && tableJoin != null) {
-	        return false;
+	    if ((col != null && col.isEmpty()) || (table != null && table.isEmpty())) {
+	        System.err.println("Error: Column or join table name is empty.");
+	        return null;
 	    }
 
-	    if (join && (tableJoin == null || !tableJoin.equals("User"))) {
-	        return false;
-	    }
+	    ArrayList<String> teamData = conn.ReadFile("Team");
 
-	    return conn != null;
-	}
+	    for (String line : teamData) {
+	        String[] fields = line.split(",");
 
-	public void find(String col, String[] condition, Boolean join, String tableJoin, Connection conn) {
-	    if (!validate(col, condition, join, tableJoin, conn)) {
-	        System.out.println("Error: Wrong Condition or Parameter");
-	        return;
-	    }
-
-	    getDataTeam(conn);
-
-	    if (condition == null) {
-	        System.out.println("ID| Team Name");
-	        System.out.println("------------------");
-	        for (Team team : teamList) {
-	            System.out.print(team.TeamID);
-	            System.out.print(" | " + team.TeamID);
-	            System.out.println();
-	        }
-	    } else {
-	        ArrayList<Team> teamAnswer = filterTeam(col, condition);
-	        Team team_curr = new Team(null, null);
-	        Fill_TeamMember(conn);
-	        for (int i = 0; i < teamAnswer.size(); i++) {
-	            team_curr = teamAnswer.get(i);
-	            System.out.println("ID| Team Name ");
-	            System.out.println("------------------");
-	            System.out.print(team_curr.TeamID);
-	            System.out.print(" | " + team_curr.NamaTeam);
-	            System.out.println();
+	        if (condition == null || (fields.length > 0 && fields[0].equals(condition[1]))) {
+	            return new Team(Integer.parseInt(fields[0]), fields[1]);
 	        }
 	    }
+
+	    return null;
 	}
 
+	@Override
+	public void insert(String[] teamName, Connection conn) {
+		Connection connection = new Connection();
+        if (teamName == null || teamName.length != 1) {
+            System.err.println("Error: Invalid team data. Must provide an array with one element.");
+            return;
+        }
 
-	public Team findOne(String col, String[] condition, boolean join, String tableJoin, Connection conn) {
+        String newTeamLine = teamName[0];
 
-	    this.getDataTeam(conn);
-	    ArrayList<Team> teamAnswer = filterTeam(col, condition);
-	    if(teamAnswer.size() == 0) return null;
-	    
-	    Team teamResult = teamAnswer.get(0);
-	    return teamResult;
+        connection.WriteFile("Team", newTeamLine);
+
+        System.out.println("Team inserted successfully.");
 	}
-	
-	public void insert(String[] namaTim, Connection conn) {
-		String[] pass = new String[]{"=", namaTim[0]};
-		
-		
-		try {
-			Team find = findOne("name", pass, false, null, conn);
-			if(find.NamaTeam.equals(namaTim[0])) {
-				System.out.println("nama team sudah ada, pilih nama baru!");
-			}
-		} catch (Exception e) {
-
-			Integer max = 0;
-			
-			for (Team team : teamList) {
-				if(team.TeamID > max) {
-					max = team.TeamID;
-				}
-			}
-			
-			Integer newTeamID = max+1;
-			String newTeamData = newTeamID.toString()+","+ namaTim[0];
-			conn.WriteFile("Team", newTeamData);
-			
-			System.out.println("Team baru telah dibuat.");
-		}
-		
-	}
-
 }

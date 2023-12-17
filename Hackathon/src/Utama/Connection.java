@@ -10,13 +10,15 @@ Pass true argument for appending.
 
 public class Connection {
 	
+	@SuppressWarnings("unused")
 	public ArrayList<String> ReadFile(String option) {
 		
 		ArrayList<String> RepoReadFile = new ArrayList<String>();
 		
 		if(option.equals("User")) {
 			try (BufferedReader reader = new BufferedReader(new FileReader("user.csv"))) {
-			
+				String headerLine = reader.readLine();
+				// buang atas
 	            String line;
 	            while ((line = reader.readLine()) != null) {
 	            	RepoReadFile.add(line);
@@ -26,6 +28,7 @@ public class Connection {
 	        }
 		}else if(option.equals("Team")) {
 			try (BufferedReader reader = new BufferedReader(new FileReader("teams.csv"))) {	
+				String headerLine = reader.readLine();
 	            String line;
 	            while ((line = reader.readLine()) != null) {
 	            	RepoReadFile.add(line);

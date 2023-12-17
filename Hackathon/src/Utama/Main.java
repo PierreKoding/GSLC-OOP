@@ -1,12 +1,8 @@
 package Utama;
-import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Scanner;
 
-import Models.User;
+import Models.Models;
 import Repository.UserRepository;
 import Repository.TeamRepository;
 
@@ -15,80 +11,15 @@ public class Main {
 	static Scanner sc = new Scanner(System.in);
 	
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		
-		Connection conn = new Connection();
-//		
-//		UserRepository urep = new UserRepository();
-//		
-//		urep.find(null, null, null, null, conn);
-		
-		
-//		conn.WriteFile("Team", "6,Hehehe");
-		
-		
-		
-		
-//		ArrayList<User> userList = new ArrayList<User>();
-//		
-//		ArrayList<String> userCSV = new ArrayList<String>();
-//		userCSV = conn.ReadFile("User");
-//
-//
-//		ArrayList<User> result = new ArrayList<User>();
-//	    
-//	    for (String userData : userCSV) {
-//	        String[] splitData = userData.split(",");
-//	        result.add(new User(splitData[1], splitData[0], Integer.parseInt(splitData[2])));
-//	    }
-//
-//	    System.out.println(result);
-//	    
-//	    userList = result;
-//		
-//		System.out.println("ID| User NIM   | User Name");
-//		System.out.println("-----------------------------");
-//		for (User user : userList) {
-//			System.out.print(user.TeamID);
-//			System.out.print(" | " + user.NIM);
-//			System.out.print(" | " + user.Nama);
-//			System.out.println();
-//		}
-		
-		
-		
-		
-		
-		
-		// Read 1
-//		Connection connection = new Connection();
-//		
-//		ArrayList<String> teamFileContents = connection.ReadFile("Team");
-//       System.out.println("Team file contents:");
-//       for (String line : teamFileContents) {
-//           System.out.println(line);
-//       }
-		
-		// Read 2
-	// 	ArrayList<String> rawData = new ArrayList<String>();
-	// 	try (BufferedReader reader = new BufferedReader(new FileReader("teams.csv"))) {
-    //        String line;
-    //        while ((line = reader.readLine()) != null) {
-    //            rawData.add(line);
-    //        }
-    //        for(String a : rawData) {
-    //        	System.out.println(a);
-    //        }
-    //    } catch (Exception e) {
-    //    	System.out.println("Empty team");
-    //    }
-		
 		 MainMenu();
 	}
 	
 	public static void InsertMenu() {
 		int table;
 		Connection conn = new Connection();
+		TeamRepository teamrepository = new TeamRepository();
+		UserRepository userrepository = new UserRepository();
+		
 		System.out.println("Which table to insert? 1. User, 2. Team");
 		table = sc.nextInt();
 		sc.nextLine();
@@ -105,8 +36,7 @@ public class Main {
 			System.out.println("add team: ");
 			newTeam = sc.nextLine();
 			
-			//validasi disini
-			conn.WriteFile("User", newnama +","+ newNIM +","+ newTeam);
+			userrepository.insert(new String[]{newnama + "," + newNIM + "," + newTeam}, conn);
 			System.out.println("User created!");
 			
 		}
@@ -114,7 +44,7 @@ public class Main {
 			String newteam;
 			System.out.println("add team name: ");
 			newteam = sc.next();
-			conn.WriteFile("Team", newteam);
+			teamrepository.insert(new String[]{newteam}, conn);
 			System.out.println("Team created!");
 		}
 		
@@ -129,63 +59,105 @@ public class Main {
 		FCon = sc.nextInt();
 		
 		
-		if(FCon==1) {
-			if(TShow == 1) {
-				ShowUserCond();
-			}
-			else if(TShow == 2) {
-				ShowTeamCond();
-			}
+		if(TShow == 1) {
+			ShowUser(FCon);
 		}
-		else if(FCon == 2) {
-			if(TShow == 1) {
-				ShowUserTemp();
-			}
-			else if(TShow == 2) {
-				ShowTeamTemp();
-			}
+		else if(TShow == 2) {
+			ShowTeam(FCon);
 		}
-		
-	}
-	
-	public static void ShowUserTemp() {
-		Connection connection = new Connection();
-		
-		ArrayList<String> teamFileContents = connection.ReadFile("User");
-       System.out.println("Team file contents:");
-       for (String line : teamFileContents) {
-           System.out.println(line);
-       }
-	}
-
-	public static void ShowTeamTemp() {
-		Connection connection = new Connection();
-		
-		ArrayList<String> teamFileContents = connection.ReadFile("Team");
-       System.out.println("Team file contents:");
-       for (String line : teamFileContents) {
-           System.out.println(line);
-       }
 	}
 	
 	
-	public static void ShowUserCond() {
-		
-	}
-	
-	public static void ShowUser() {
+	public static void ShowUser(int condition) {
 		UserRepository UserShow = new UserRepository();
+		Connection connection = new Connection();
 		
-//		UserShow.find(null,null, join, "Team", conn)
+		if(condition == 1) {
+			String kolom;
+			sc.nextLine();
+		    System.out.println("Kolom yang mana: ");
+		    kolom = sc.nextLine();
+
+		    String kondisi[];
+		    System.out.println("add condition, separate by semicolon.");
+		    System.out.println("Format [=/!=, nama] : ");
+		    kondisi = sc.nextLine().split(";");
+
+		    String joinkah;
+		    System.out.println("Apakah ingin join table?[Y/N]");
+		    joinkah = sc.next();
+		    boolean joinkah2 = joinkah.equalsIgnoreCase("Y");
+
+		    ArrayList<Models> Displae = new ArrayList<Models>();
+		    Displae = UserShow.find(kolom, kondisi, joinkah2, "Team", connection);
+			
+		}
 		
-	}
-	
-	public static void ShowTeamCond() {
+		// jika tidak ada kondisi
+		String joinkah;
+		System.out.println("Apakah ingin join table?[Y/N]");
+		joinkah = sc.next();
 		
+		if(joinkah.equals("Y")) {
+			ArrayList<Models> Displae = new ArrayList<Models>();
+			Displae = UserShow.find(null, null, true, "Team", connection);
+			
+		}
+		else {
+			ArrayList<Models> Displae = new ArrayList<Models>();
+			
+			Displae = UserShow.find(null, null, null, null, connection);
+			
+			for(Models temp : Displae) {
+				System.out.println(temp);
+			}
+		}
 	}
 
-	public static void ShowTeam() {
+	public static void ShowTeam(int condition) {
+		TeamRepository TeamShow = new TeamRepository();
+		Connection connection = new Connection();
 		
+		if(condition == 1) {
+			String kolom;
+			sc.nextLine();
+		    System.out.println("Kolom yang mana: ");
+		    kolom = sc.nextLine();
+
+		    String kondisi[];
+		    System.out.println("add condition, separate by semicolon.");
+		    System.out.println("Format [=/!=, nama] : ");
+		    kondisi = sc.nextLine().split(";");
+
+		    String joinkah;
+		    System.out.println("Apakah ingin join table?[Y/N]");
+		    joinkah = sc.next();
+		    boolean joinkah2 = joinkah.equalsIgnoreCase("Y");
+
+		    ArrayList<Models> Displae = new ArrayList<Models>();
+		    Displae = TeamShow.find(kolom, kondisi, joinkah2, "Team", connection);
+			
+		}
+		
+		// jika tidak ada kondisi
+		String joinkah;
+		System.out.println("Apakah ingin join table?[Y/N]");
+		joinkah = sc.next();
+		
+		if(joinkah.equals("Y")) {
+			ArrayList<Models> Displae = new ArrayList<Models>();
+			Displae = TeamShow.find(null, null, true, "Team", connection);
+			
+		}
+		else {
+			ArrayList<Models> Displae = new ArrayList<Models>();
+			
+			Displae = TeamShow.find(null, null, null, null, connection);
+			
+			for(Models temp : Displae) {
+				System.out.println(temp);
+			}
+		}
 	}
 	
 	public static void MainMenu() {
